@@ -4,4 +4,4 @@ alter table production modify maschine_id INT;
 alter table production add foreign key (maschine_id) references maschine(mashine_id);  
 
 insert into maschine(maschine_name) values ('M130');
-insert into production(maschine_id, quatitty) values (1, 200);
+insert into production(maschine_id, quatitty) values (2, 200);

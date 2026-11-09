@@ -58,3 +58,74 @@ where first_name = 'Janusz';
 
 
 --Zad7
+create or replace view v_zadanie7 as
+select
+    d.department_id,
+    d.department_name,
+    count(e.employee_id) as liczba_pracownikow,
+    avg(e.salary) as srednia_pensja,
+    max(e.salary) as naj_pensja
+from departments d
+join employees e on e.department_id = d.department_id
+group by d.department_id, d.department_name
+having count(e.employee_id) >= 4;
+
+select * from v_zadanie7 order by liczba_pracownikow;
+
+insert into v_statystyki_dzialow (
+    department_id,
+    department_name,
+    liczba_pracownikow,
+    srednia_pensja,
+    najwyzsza_pensja
+)
+values (
+    999,'dzial R&D',4,7000,10000
+);
+--Do tak zdefiniowanego widoku nie można bezpośrednio dodawać danych, ponieważ zawiera group by oraz funkcje agregujące t.j. count, avg i max. 
+--Jeden wiersz widoku jest podsumowaniem całego działu, a nie pojedynczym rekordem pracownika
+
+--Zad8
+create view v_wysokie_pensje_Zad8 as select * from employees e
+    where e.salary >12000
+    with check option;
+        
+select * from v_wysokie_pensje_Zad8;
+
+insert into v_wysokie_pensje_Zad8(
+    employee_id,
+    last_name,
+    first_name,
+    email,
+    hire_date,
+    job_id,
+    salary
+)
+values (5367,'Bogaty','Jan','bogacz@wp.pl',sysdate,'AD_VP',13000);
+--warunek with check option nie zezwolił na dodanie pracownika o zarobkach niższych niż zadelklarowano w nagłówku
+
+--Zad9
+create materialized view mv_managerowie
+build immediate    --dane zostają zapisane w widoku od razu podczas tworzenia mview
+refresh complete on demand   -- odświerzenie wyników na żądanie a nie po zmienie po zmienie w tabeli źródłowej
+as select 
+    e.employee_id,
+    e.first_name,
+    e.last_name,
+    d.department_id,
+    d.department_name
+from employees e
+join departments d on d.manager_id = e.employee_id;
+
+select * from mv_managerowie;
+
+exec dbms_mview.refresh('v_managerowie', 'c');  --oświerzanie zawartości mv, 'c' oznacza complete, czyli pełne odświeżenie
+
+
+--Zad10
+create view v_najlepiej_oplacani as
+select * from employees
+order by salary desc nulls last, employee_id
+fetch first 10 rows only;
+
+select * from v_najlepiej_oplacani;
